@@ -11,11 +11,11 @@
       
       <div class="login-form">
         <el-form :model="loginForm" :rules="loginRules" ref="loginFormRef">
-          <el-form-item prop="username">
+          <el-form-item prop="email">
             <el-input 
-              v-model="loginForm.username" 
-              placeholder="用户名/邮箱" 
-              prefix-icon="el-icon-user"
+              v-model="loginForm.email" 
+              placeholder="邮箱" 
+              prefix-icon="el-icon-message"
             ></el-input>
           </el-form-item>
           
@@ -34,7 +34,7 @@
             <a href="javascript:;" class="forget-password">忘记密码?</a>
           </div>
           
-          <el-button type="primary" class="login-button" @click="handleLogin">登录</el-button>
+          <el-button type="primary" class="login-button" @click="handleLogin" :loading="loading">登录</el-button>
           
           <div class="register-link">
             还没有账号? <router-link to="/register">立即注册</router-link>
@@ -48,21 +48,23 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { login } from '@/api/auth'
 
 const router = useRouter()
 const loginFormRef = ref(null)
 
 // 登录表单数据
 const loginForm = reactive({
-  username: '',
+  email: '',
   password: ''
 })
 
 // 表单验证规则
 const loginRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -71,19 +73,49 @@ const loginRules = {
 }
 
 // 记住我选项
-const rememberMe = ref(false)
+const rememberMe = ref(localStorage.getItem('rememberMe') === 'true')
+
+// 加载状态
+const loading = ref(false)
+
+// 初始化函数
+const initForm = () => {
+  // 如果之前勾选了记住我，则自动填充邮箱
+  if (rememberMe.value) {
+    loginForm.email = localStorage.getItem('email') || ''
+  }
+}
+
+// 页面加载时初始化表单
+initForm()
 
 // 登录处理
 const handleLogin = () => {
   loginFormRef.value.validate(valid => {
     if (valid) {
-      // 模拟登录请求
-      setTimeout(() => {
-        // 存储token
-        localStorage.setItem('token', 'mock-token-value')
-        // 跳转到主页
-        router.push('/layout/plan')
-      }, 1000)
+      loading.value = true
+      login(loginForm)
+        .then(res => {
+          // ✅ res 是后端返回的 data：包含 user 和 token
+          ElMessage.success('登录成功')
+
+          // 存储 token
+          localStorage.setItem('token', res.token)
+
+          // 存储邮箱（可选）
+          if (rememberMe.value) {
+            localStorage.setItem('email', res.user.email)
+          }
+
+          // 跳转页面
+          router.push('/layout/plan')
+        })
+        .catch(error => {
+          ElMessage.error(error.message || '登录失败，请检查邮箱和密码')
+        })
+        .finally(() => {
+          loading.value = false
+        })
     }
   })
 }
