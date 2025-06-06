@@ -71,7 +71,7 @@
     </div>
 
     <!-- 今日练习记录 -->
-    <div class="today-practice">
+    <!-- <div class="today-practice">
       <h3>今日练习记录</h3>
       <div class="practice-list">
         <div class="practice-time">09:00</div>
@@ -80,10 +80,10 @@
           <div class="practice-status">提交成功 / 测试用例 x/5</div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 复习周期 -->
-    <div class="review-cycle">
+    <!-- <div class="review-cycle">
       <h3>复习周期</h3>
       <div class="cycle-item">
         <span>二叉树遍历</span>
@@ -91,7 +91,7 @@
         <span class="progress-text">已复习 3/5</span>
         <el-button type="success" size="small" plain>继续</el-button>
       </div>
-    </div>
+    </div> -->
 
     <!-- 当天任务详情弹窗 -->
     <el-dialog
@@ -111,7 +111,22 @@
               <h4>{{ task.title }}</h4>
               <p>状态: {{ task.status === 'todo' ? '待完成' : '已完成' }}</p>
               <p>重复次数: {{ task.repeat_index }}</p>
-              <el-button type="primary" size="small" @click="goToPractice(task)">去练习</el-button>
+              <el-button 
+                type="primary" 
+                size="small" 
+                @click="goToPractice(task)"
+                v-if="isToday(selectedDate)"
+              >
+                去练习
+              </el-button>
+              <el-button
+                type="info"
+                size="small"
+                disabled
+                v-else
+              >
+                非今日任务
+              </el-button>
             </el-card>
           </el-timeline-item>
         </el-timeline>
@@ -178,18 +193,14 @@
         </el-form-item>
 
         <el-form-item v-if="createPlanForm.source_type === 'manual'" label="选择题目">
-          <el-select
-            v-model="createPlanForm.question_ids"
-            multiple
-            placeholder="请选择题目"
-          >
-            <el-option
-              v-for="question in libraryQuestions"
-              :key="question.id"
-              :label="question.title"
-              :value="question.id"
-            ></el-option>
-          </el-select>
+              <el-select v-model="createPlanForm.question_ids" multiple placeholder="请选择题目" style="width: 100%;" @change="handleQuestionSelectionChange">
+                <el-option
+                  v-for="question in libraryQuestions"
+                  :key="question.question_id"
+                  :label="question.title"
+                  :value="question.question_id">
+                </el-option>
+              </el-select>
         </el-form-item>
       </el-form>
 
@@ -320,6 +331,11 @@ const handleCreatePlanDialogOpen = () => {
   fetchLibraryQuestions()
 }
 
+const handleQuestionSelectionChange = (selectedIds) => {
+  createPlanForm.value.question_ids = selectedIds
+  console.log('Selected question IDs:', selectedIds)
+};
+
 // 日历相关数据
 const currentDate = ref(new Date())
 const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -345,7 +361,9 @@ const nextMonth = () => {
 
 const isToday = (date) => {
   const today = new Date()
-  return date === today.toISOString().split('T')[0]
+  // 转换为北京时间并对比日期
+  const todayBJ = new Date(today.getTime() + (8 * 60 * 60 * 1000))
+  return date === todayBJ.toISOString().split('T')[0]
 }
 
 const generateCalendar = () => {

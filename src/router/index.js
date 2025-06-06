@@ -37,6 +37,12 @@ const routes = [
         meta: { title: '练习' }
       },
       {
+        path: 'daily-recommendation',
+        name: 'DailyRecommendation',
+        component: () => import('@/views/practice/daily-recommendation.vue'),
+        meta: { title: '每日一题推荐' }
+      },
+      {
         path: 'statistics',
         name: 'Statistics',
         component: () => import('@/views/statistics/index.vue'),

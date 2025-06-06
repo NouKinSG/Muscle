@@ -15,6 +15,9 @@
             <el-menu-item index="/layout/practice">
               练习
             </el-menu-item>
+            <el-menu-item index="/layout/daily-recommendation">
+              每日一题
+            </el-menu-item>
             <el-menu-item index="/layout/statistics">
               数据分析
             </el-menu-item>
@@ -67,12 +70,16 @@ const route = useRoute();
 const userStore = useUserStore();
 
 const activeIndex = computed(() => {
-  // 根据当前路由确定激活的导航项
-  if (route.path.startsWith('/layout/plan')) return '/layout/plan';
-  if (route.path.startsWith('/layout/practice')) return '/layout/practice';
-  if (route.path.startsWith('/layout/analysis')) return '/layout/analysis';
-  if (route.path.startsWith('/layout/records')) return '/layout/records';
-  return '/layout/plan'; // 默认
+  // 从当前路由路径中提取主要部分作为激活的菜单项
+  const path = route.path;
+  if (path.startsWith('/layout/plan')) return 'plan';
+  if (path.startsWith('/layout/practice')) {
+    if (path.includes('daily-recommendation')) return 'daily-recommendation';
+    return 'practice';
+  }
+  if (path.startsWith('/layout/statistics')) return 'statistics';
+  if (path.startsWith('/layout/profile')) return 'profile';
+  return '';
 });
 
 const handleSelect = async (key) => {
@@ -93,6 +100,8 @@ const handleSelect = async (key) => {
       ElMessage.error('获取每日任务失败，请稍后再试');
       console.error('Failed to fetch daily tasks:', error);
     }
+  } else if (key === '/layout/daily-recommendation') {
+    router.push({ name: 'DailyRecommendation' });
   } else {
     router.push(key);
   }

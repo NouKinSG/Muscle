@@ -43,7 +43,7 @@
 
       <!-- Middle Panel: Problem Description and Code Editor -->
       <el-col :xs="24" :sm="18" :md="19" :lg="20" class="problem-content-col">
-        <el-card class="box-card problem-description-card" v-if="problem">
+        <el-card class="box-card problem-description-card" v-if="problem" style="max-height: 100vh; overflow-y: auto;">
           <template #header>
             <div class="problem-title-bar">
               <h2 class="problem-title">{{ problem.title }}</h2>
@@ -66,7 +66,7 @@
         </el-card>
         <el-skeleton :rows="10" animated v-else />
 
-        <el-card class="box-card code-editor-card" v-loading="submitting" element-loading-text="Submitting...">
+        <el-card class="box-card code-editor-card" v-loading="submitting" element-loading-text="Submitting..." style="max-height: 100vh; overflow-y: auto;">
           <template #header>
             <div class="editor-controls">
               <el-select v-model="selectedLanguage" placeholder="Language" size="small" @change="onLanguageChange" style="width: 150px;">
@@ -121,7 +121,7 @@
           </el-tag>
         </p>
         <p v-if="submissionResult.message"><strong>信息:</strong> {{ submissionResult.message }}</p>
-        <p v-if="submissionResult.runtime"><strong>运行时间:</strong> {{ submissionResult.runtime }} ms</p>
+        <p v-if="submissionResult.runtime"><strong>运行时间:</strong> {{ submissionResult.runtime }}</p>
         <p v-if="submissionResult.memory"><strong>内存消耗:</strong> {{ submissionResult.memory }} MB</p>
         <div v-if="submissionResult.status !== 'Accepted' && submissionResult.status !== 'Error' && submissionResult.compile_error">
           <p><strong>编译错误:</strong></p>
@@ -752,6 +752,8 @@ const navigateToProblem = (qId) => {
 
 
 
+
+
 .problem-list-card,
 .problem-description-card,
 .code-editor-card {
@@ -827,10 +829,18 @@ const navigateToProblem = (qId) => {
   margin-bottom: 10px; /* Add some space below controls */
 }
 
+.code-editor-card .el-card__body {
+  display: flex;
+  flex-direction: column;
+  /* Optionally, set a min-height if needed, e.g., min-height: 500px; */
+  /* The height of CodeMirror (400px) + header + actions should be considered */
+}
+
 .editor-wrapper {
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   overflow: hidden; /* Ensures the textarea fits within the border */
+  flex-grow: 1; /* Allows the editor to take available space */
 }
 
 .code-input-textarea :deep(textarea) {
