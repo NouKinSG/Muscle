@@ -1,71 +1,31 @@
-import request from '@/utils/request'
+// src/api/practice.js
+import request from '@/utils/request';
 
-/**
- * 获取当日练习题目列表
- * @param {Object} params - 请求参数 {user_id}
- * @returns {Promise<{
- *   data: Array<{
- *     question_id: number,
- *     title: string,
- *     difficulty: string,
- *     acceptance_rate: number,
- *     next_review_at: string
- *   }>
- * }>}
- */
-export function getTodayPractice(params) {
+// 提交代码
+export const submitCode = (data) => {
   return request({
-    url: '/api/practice/today',
-    method: 'get',
-    params
-  })
-}
-
-/**
- * 获取题目详情
- * @param {number} questionId - 题目ID
- * @returns {Promise<{
- *   question_id: number,
- *   title: string,
- *   slug: string,
- *   content: string,
- *   difficulty: string,
- *   acceptance_rate: number,
- *   test_cases: Array<{
- *     input: string,
- *     output: string
- *   }>,
- *   initial_code: Object<string, string>
- * }>}
- */
-export function getProblemDetail(questionId) {
-  return request({
-    url: `/api/problems/${questionId}`,
-    method: 'get'
-  })
-}
-
-/**
- * 提交题目代码
- * @param {Object} data - 提交数据
- * @param {number} data.userId - 用户ID
- * @param {number} data.question_id - 题目ID
- * @param {string} data.codeContent - 代码内容
- * @param {string} data.language - 编程语言
- * @returns {Promise<{
- *   submissionId: number,
- *   status: string,
- *   runtime: string,
- *   errorMessage: string|null
- * }>}
- */
-export function submitPractice(data) {
-  return request({
-    url: '/api/practice/submit',
+    url: '/algo/v1/practice/submit',
     method: 'post',
     data
-  })
-}
+  });
+};
+
+// 获取每日任务列表
+export const getDailyTasks = () => {
+  return request({
+    url: '/algo/v1/practice/daily-tasks',
+    method: 'get'
+  });
+};
+
+
+// 获取题目详情 (如果题目详情接口也属于练习模块)
+export const getProblemDetail = (id) => {
+  return request({
+    url: `/algo/v1/practice/questions/${id}`,
+    method: 'get'
+  });
+};
 
 /**
  * 获取最近一次通过的提交记录
@@ -83,7 +43,7 @@ export function submitPractice(data) {
  */
 export function getLastAcceptedSubmission(params) {
   return request({
-    url: '/api/practice/previous-accepted/last',
+    url: '/algo/v1/practice/previous-accepted/list', // Changed from /algo/v1/practice/last-accepted
     method: 'get',
     params
   })
@@ -106,7 +66,7 @@ export function getLastAcceptedSubmission(params) {
  */
 export function getAcceptedSubmissionList(params) {
   return request({
-    url: '/api/practice/previous-accepted/list',
+    url: '/algo/v1/practice/previous-submissions',
     method: 'get',
     params
   })

@@ -1,255 +1,202 @@
 <template>
   <div class="plan-container">
-    <!-- 日历视图区域 -->
-    <div class="calendar-section" v-if="!showPlanTable">
-      <!-- 日历头部 -->
-      <div class="calendar-header">
-        <div class="calendar-title">
-          <h2>{{ currentYear }}年{{ currentMonth }}月</h2>
-          <div class="calendar-nav">
-            <el-button icon="ArrowLeft" circle @click="prevMonth">《</el-button>
-            <el-button icon="ArrowRight" circle @click="nextMonth">》</el-button>
-          </div>
-        </div>
-        <div class="calendar-actions">
-          <el-button type="primary" icon="Plus" @click="showNewPlanDialog">新建计划</el-button>
-          <el-button icon="Edit" @click="showNoteDialog">速记</el-button>
-        </div>
+    <div class="header-actions">
+      <h1>{{ currentYear }}年{{ currentMonth + 1 }}月</h1>
+      <div class="month-navigation">
+        <el-button-group>
+          <el-button @click="prevMonth">
+            <el-icon><ArrowLeft /></el-icon>
+          </el-button>
+          <el-button @click="nextMonth">
+            <el-icon><ArrowRight /></el-icon>
+          </el-button>
+        </el-button-group>
       </div>
-      
-      <!-- 日历主体 -->
-      <div class="calendar-body">
-      <!-- 星期标题行 -->
-      <div class="calendar-weekdays">
-        <div class="weekday">周日</div>
-        <div class="weekday">周一</div>
-        <div class="weekday">周二</div>
-        <div class="weekday">周三</div>
-        <div class="weekday">周四</div>
-        <div class="weekday">周五</div>
-        <div class="weekday">周六</div>
-      </div>
-      
-      <!-- 日期网格 -->
-      <div class="calendar-grid">
-        <div 
-          v-for="(day, index) in calendarDays" 
-          :key="index" 
-          class="calendar-day" 
-          :class="{ 'current-month': day.currentMonth, 'today': day.isToday, 'selected': isSelectedDay(day) }"
-          @click="selectDay(day, index)"
-        >
-          <!-- 日期单元格顶部 -->
-          <div class="day-header">
-            <span class="day-number">{{ day.date }}</span>
-            <span v-if="day.weather" :class="`weather-icon ${day.weather}`"></span>
-          </div>
-          
-          <!-- 日期单元格内容 -->
-          <div class="day-content">
-            <!-- 完成题量徽章 -->
-            <div v-if="day.completedCount" class="completed-badge">
-              {{ day.completedCount }}
-            </div>
-            
-            <!-- 知识点标签 -->
-            <div class="tag-cloud">
-              <span 
-                v-for="(tag, tagIndex) in day.tags" 
-                :key="tagIndex" 
-                class="algorithm-tag"
-                :style="{ backgroundColor: getTagColor(tag) }"
-              >
-                {{ tag }}
-              </span>
-            </div>
-          </div>
-          
-          <!-- 日期单元格底部 -->
-          <div class="day-footer">
-            <!-- 学习时长进度条 -->
-            <div v-if="day.studyTime" class="study-progress">
-              <div 
-                class="progress-bar" 
-                :style="{ width: `${Math.min(day.studyTime / targetStudyTime * 100, 100)}%` }"
-              ></div>
-            </div>
-            
-            <!-- 错误率警告 -->
-            <div v-if="day.errorRate > 0.5" class="error-warning">
-              <el-icon><Warning /></el-icon>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
-    </div>
-    
-    <!-- 艾宾浩斯记忆曲线学习计划表 -->
-    <div class="plan-table-section" v-if="showPlanTable">
-      <div class="plan-table-header">
-        <h2>艾宾浩斯记忆曲线学习计划</h2>
-        <el-button @click="showPlanTable = false">
-          <el-icon><ArrowLeft /></el-icon>
-          返回日历视图
+      <div class="action-buttons">
+        <el-button type="primary" @click="showCreatePlanDialog = true">
+          <el-icon><Plus /></el-icon>新建计划
+        </el-button>
+        <el-button @click="showPracticeDialog = true">
+          <el-icon><Edit /></el-icon>速记
         </el-button>
       </div>
-      <PlanTable />
     </div>
-    
-    <!-- 右侧工具面板 -->
-    <div class="tools-panel">
-      <!-- 知识掌握度雷达图 -->
-      <div class="radar-chart-container card">
-        <h3>知识掌握度</h3>
-        <div id="radar-chart" class="radar-chart"></div>
+
+    <div class="calendar-container">
+      <div class="weekdays">
+        <div v-for="day in weekDays" :key="day" class="weekday">{{ day }}</div>
       </div>
-      
-      <!-- 今日练习记录 -->
-      <div class="today-records card">
-        <h3>今日练习记录</h3>
-        <div class="record-list">
-          <div class="record-item" v-for="(record, index) in todayRecords" :key="index">
-            <div class="record-time">{{ record.time }}</div>
-            <div class="record-content">
-              <div class="record-title">{{ record.title }}</div>
-              <div class="record-detail">{{ record.detail }}</div>
-            </div>
+      <div class="calendar-grid">
+        <div
+          v-for="day in calendarDays"
+          :key="day.date"
+          class="calendar-day"
+          :class="{
+            'current-month': day.currentMonth,
+            'today': isToday(day.date),
+            'has-tasks': day.tasks && day.tasks.length > 0
+          }"
+          @click="openDayDetail(day)"
+        >
+          <div class="day-header">
+            <span class="day-number">{{ new Date(day.date).getDate() }}</span>
+            <el-icon v-if="day.weather === 'sunny'">
+              <Sunny />
+            </el-icon>
+            <el-icon v-else-if="day.weather === 'cloudy'">
+              <Cloudy />
+            </el-icon>
           </div>
-        </div>
-      </div>
-      
-      <!-- 复习周期 -->
-      <div class="review-cycles card">
-        <h3>复习周期</h3>
-        <div class="cycle-items">
-          <div class="cycle-item" v-for="(cycle, index) in reviewCycles" :key="index">
-            <div class="cycle-info">
-              <div class="cycle-name">{{ cycle.name }}</div>
-              <div class="cycle-progress">第 {{ cycle.current }} 天/共 {{ cycle.total }} 天</div>
+          <div class="day-content">
+            <!-- Visual indicator for tasks -->
+            <div v-if="day.tasks && day.tasks.length > 0" class="task-indicator-container">
+              <span class="task-indicator"></span>
+              <span v-if="day.tasks.length > 1" class="task-count">+{{ day.tasks.length -1 }}</span>
             </div>
-            <div class="progress">
-              <div 
-                class="progress-bar" 
-                :style="{ width: `${(cycle.current / cycle.total) * 100}%` }"
-              ></div>
+            <div v-if="day.tasks && day.tasks.length > 0" class="task-list-summary">
+              <div v-for="task in day.tasks.slice(0, 2)" :key="task.task_id" class="task-summary-item">
+                {{ task.title.length > 5 ? task.title.substring(0, 5) + '...' : task.title }}
+              </div>
             </div>
-            <div class="cycle-status">
-              {{ cycle.status }}
-            </div>
+            <div v-else class="no-tasks-placeholder"></div> <!-- Placeholder for alignment -->
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- 新建计划对话框 -->
+
+    <!-- 知识学习度雷达图 -->
+    <div class="knowledge-radar">
+      <h3>知识掌握度</h3>
+      <div class="radar-chart" ref="radarChart"></div>
+    </div>
+
+    <!-- 今日练习记录 -->
+    <div class="today-practice">
+      <h3>今日练习记录</h3>
+      <div class="practice-list">
+        <div class="practice-time">09:00</div>
+        <div class="practice-item">
+          <div class="practice-title">新题 - 二叉树的最大深度</div>
+          <div class="practice-status">提交成功 / 测试用例 x/5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 复习周期 -->
+    <div class="review-cycle">
+      <h3>复习周期</h3>
+      <div class="cycle-item">
+        <span>二叉树遍历</span>
+        <el-progress :percentage="60" :format="format" />
+        <span class="progress-text">已复习 3/5</span>
+        <el-button type="success" size="small" plain>继续</el-button>
+      </div>
+    </div>
+
+    <!-- 当天任务详情弹窗 -->
     <el-dialog
-      title="新建学习计划"
-      v-model="newPlanDialogVisible"
+      v-model="showDayDetailDialog"
+      :title="`${selectedDate} 的任务详情`"
       width="500px"
     >
-      <el-form :model="newPlanForm" label-width="80px">
-        <el-form-item label="计划名称">
-          <el-input v-model="newPlanForm.name" placeholder="请输入计划名称"></el-input>
+      <div v-if="selectedDateTasks.length > 0">
+        <el-timeline>
+          <el-timeline-item
+            v-for="task in selectedDateTasks"
+            :key="task.task_id"
+            :timestamp="task.title"
+            placement="top"
+          >
+            <el-card>
+              <h4>{{ task.title }}</h4>
+              <p>状态: {{ task.status === 'todo' ? '待完成' : '已完成' }}</p>
+              <p>重复次数: {{ task.repeat_index }}</p>
+              <el-button type="primary" size="small" @click="goToPractice(task)">去练习</el-button>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+      <div v-else>
+        <el-empty description="当天没有任务安排"></el-empty>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showDayDetailDialog = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 新建计划对话框 -->
+    <el-dialog
+      v-model="showCreatePlanDialog"
+      title="新建计划"
+      width="600px"
+      @open="handleCreatePlanDialogOpen"
+    >
+      <el-form :model="createPlanForm" label-width="100px">
+        <el-form-item label="计划名称" required>
+          <el-input v-model="createPlanForm.plan_name" placeholder="请输入计划名称"></el-input>
         </el-form-item>
-        <el-form-item label="开始日期">
-          <el-date-picker v-model="newPlanForm.startDate" type="date" placeholder="选择开始日期"></el-date-picker>
+
+        <el-form-item label="开始日期" required>
+          <el-date-picker
+            v-model="createPlanForm.start_date"
+            type="date"
+            placeholder="选择开始日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+          ></el-date-picker>
         </el-form-item>
-        <el-form-item label="结束日期">
-          <el-date-picker v-model="newPlanForm.endDate" type="date" placeholder="选择结束日期"></el-date-picker>
-        </el-form-item>
-        <el-form-item label="计划类型">
-          <el-select v-model="newPlanForm.type" placeholder="请选择计划类型">
-            <el-option label="模板计划" value="template"></el-option>
-            <el-option label="历史错题" value="wrong"></el-option>
-            <el-option label="智能推荐" value="recommend"></el-option>
+
+        <el-form-item label="重复策略" required>
+          <el-select v-model="createPlanForm.repeat_strategy_key" placeholder="请选择重复策略">
+            <el-option
+              v-for="strategy in repeatStrategies"
+              :key="strategy.key"
+              :label="strategy.name"
+              :value="strategy.key"
+            ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="每日题量">
-          <el-input-number v-model="newPlanForm.dailyCount" :min="1" :max="20"></el-input-number>
+
+        <el-form-item label="题目来源" required>
+          <el-radio-group v-model="createPlanForm.source_type">
+            <el-radio label="topic_set">题单导入</el-radio>
+            <el-radio label="manual">自选题目</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item v-if="createPlanForm.source_type === 'topic_set'" label="选择题单">
+          <el-select v-model="createPlanForm.source_id" placeholder="请选择题单">
+            <el-option
+              v-for="set in questionSets"
+              :key="set.id"
+              :label="set.name"
+              :value="set.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item v-if="createPlanForm.source_type === 'manual'" label="选择题目">
+          <el-select
+            v-model="createPlanForm.question_ids"
+            multiple
+            placeholder="请选择题目"
+          >
+            <el-option
+              v-for="question in libraryQuestions"
+              :key="question.id"
+              :label="question.title"
+              :value="question.id"
+            ></el-option>
+          </el-select>
         </el-form-item>
       </el-form>
+
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="newPlanDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="createNewPlan">创建</el-button>
-        </span>
-      </template>
-    </el-dialog>
-    
-    <!-- 速记对话框 -->
-    <el-dialog
-      title="今日速记"
-      v-model="noteDialogVisible"
-      width="600px"
-    >
-      <div class="markdown-editor">
-        <el-input
-          type="textarea"
-          v-model="noteContent"
-          :rows="10"
-          placeholder="支持 Markdown 格式..."
-        ></el-input>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="noteDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="saveNote">保存</el-button>
-        </span>
-      </template>
-    </el-dialog>
-    
-    <!-- 日期详情对话框 -->
-    <el-dialog
-      :title="selectedDayTitle"
-      v-model="dayDetailDialogVisible"
-      width="600px"
-    >
-      <div class="day-detail-content" v-if="selectedDay">
-        <div class="day-summary">
-          <div class="summary-item">
-            <div class="summary-label">完成题量</div>
-            <div class="summary-value">{{ selectedDay.completedCount || 0 }} 题</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">学习时长</div>
-            <div class="summary-value">{{ selectedDay.studyTime || 0 }} 分钟</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">错误率</div>
-            <div class="summary-value" :class="{ 'error-text': selectedDay.errorRate > 0.5 }">
-              {{ Math.round((selectedDay.errorRate || 0) * 100) }}%
-            </div>
-          </div>
-        </div>
-        
-        <div class="day-tags" v-if="selectedDay.tags && selectedDay.tags.length > 0">
-          <h4>知识点标签</h4>
-          <div class="tag-list">
-            <el-tag 
-              v-for="(tag, index) in selectedDay.tags" 
-              :key="index"
-              :color="getTagColor(tag)"
-              effect="dark"
-              class="day-tag"
-            >
-              {{ tag }}
-            </el-tag>
-          </div>
-        </div>
-        
-        <div class="day-actions">
-          <h4>可执行操作</h4>
-          <div class="action-buttons">
-            <el-button type="primary" @click="addPlanForSelectedDay">添加计划</el-button>
-            <el-button @click="viewProblemsForSelectedDay">查看题目</el-button>
-            <el-button @click="addNoteForSelectedDay">添加笔记</el-button>
-          </div>
-        </div>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dayDetailDialogVisible = false">关闭</el-button>
+          <el-button @click="showCreatePlanDialog = false">取消</el-button>
+          <el-button type="primary" :loading="createPlanLoading" @click="handleCreatePlan">创建</el-button>
         </span>
       </template>
     </el-dialog>
@@ -258,466 +205,334 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
-import dayjs from 'dayjs'
-import { ArrowLeft, ArrowRight, Plus, Edit, Warning } from '@element-plus/icons-vue'
-import PlanTable from '@/components/PlanTable.vue'
+import { ArrowLeft, ArrowRight, Plus, Edit, Sunny, Cloudy } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { getCalendarTasks, getDayPlan, getRepeatStrategies, getQuestionSetList, getQuestionSetDetail, getLibraryQuestions, importPlan } from '@/api/plan'
 
-// 当前日期相关数据
-const currentDate = ref(dayjs())
-const currentYear = computed(() => currentDate.value.year())
-const currentMonth = computed(() => currentDate.value.month() + 1)
+const router = useRouter()
+const radarChart = ref(null)
+const showCreatePlanDialog = ref(false)
+const showPracticeDialog = ref(false)
+const showDayDetailDialog = ref(false)
+const selectedDateTasks = ref([])
+const selectedDate = ref('')
 
-// 是否显示计划表
-const showPlanTable = ref(false)
-
-// 目标学习时间（分钟）
-const targetStudyTime = 120
-
-// 选中的日期
-const selectedDayIndex = ref(null)
-const selectedDay = ref(null)
-const dayDetailDialogVisible = ref(false)
-
-// 选中日期的标题
-const selectedDayTitle = computed(() => {
-  if (!selectedDay.value) return '日期详情'
-  
-  const dayObj = dayjs()
-    .year(currentYear.value)
-    .month(currentMonth.value - 1)
-    .date(selectedDay.value.date)
-  
-  return `${dayObj.format('YYYY年MM月DD日')} 详情`
+// 新建计划相关数据
+const createPlanForm = ref({
+  plan_name: '',
+  source_type: 'manual', // manual 或 topic_set
+  start_date: '',
+  repeat_strategy_key: '',
+  source_id: '',
+  question_ids: []
 })
+const repeatStrategies = ref([])
+const questionSets = ref([])
+const libraryQuestions = ref([])
+const createPlanLoading = ref(false)
 
-// 选择日期
-function selectDay(day, index) {
-  selectedDayIndex.value = index
-  selectedDay.value = day
-  dayDetailDialogVisible.value = true
+// 获取重复策略列表
+const fetchRepeatStrategies = async () => {
+  try {
+    const res = await getRepeatStrategies()
+    repeatStrategies.value = res || []
+  } catch (error) {
+    console.error('获取重复策略失败:', error)
+    ElMessage.error('获取重复策略失败')
+  }
 }
 
-// 判断是否为选中的日期
-function isSelectedDay(day) {
-  return selectedDay.value && selectedDay.value === day
+// 获取题单列表
+const fetchQuestionSets = async () => {
+  try {
+    const res = await getQuestionSetList({
+       page: 1,
+       page_size: 20
+     })
+     questionSets.value = res.sets || []
+  } catch (error) {
+    console.error('获取题单列表失败:', error)
+    ElMessage.error('获取题单列表失败')
+  }
 }
 
-// 为选中日期添加计划
-function addPlanForSelectedDay() {
-  // 预填充日期
-  const selectedDayObj = dayjs()
-    .year(currentYear.value)
-    .month(currentMonth.value - 1)
-    .date(selectedDay.value.date)
+// 获取题库题目列表
+const fetchLibraryQuestions = async () => {
+  try {
+    const res = await getLibraryQuestions({})
+    libraryQuestions.value = res || []
+  } catch (error) {
+    console.error('获取题库列表失败:', error)
+    ElMessage.error('获取题库列表失败')
+  }
+}
+
+// 创建计划
+const handleCreatePlan = async () => {
+  if (!createPlanForm.value.plan_name) {
+    ElMessage.warning('请输入计划名称')
+    return
+  }
+  if (!createPlanForm.value.start_date) {
+    ElMessage.warning('请选择开始日期')
+    return
+  }
+  if (!createPlanForm.value.repeat_strategy_key) {
+    ElMessage.warning('请选择重复策略')
+    return
+  }
+
+  createPlanLoading.value = true
+  try {
+    await importPlan({
+      plan_name: createPlanForm.value.plan_name,
+      source_type: createPlanForm.value.source_type,
+      start_date: createPlanForm.value.start_date,
+      repeat_strategy_key: createPlanForm.value.repeat_strategy_key,
+      source_id: createPlanForm.value.source_type === 'topic_set' ? createPlanForm.value.source_id : undefined,
+      question_ids: createPlanForm.value.source_type === 'manual' ? createPlanForm.value.question_ids : undefined
+    })
+    ElMessage.success('计划创建成功')
+    showCreatePlanDialog.value = false
+    fetchCalendarTasks() // 刷新日历数据
+  } catch (error) {
+    console.error('创建计划失败:', error)
+    ElMessage.error('创建计划失败')
+  } finally {
+    createPlanLoading.value = false
+  }
+}
+
+// 监听对话框打开
+const handleCreatePlanDialogOpen = () => {
+  createPlanForm.value = {
+    plan_name: '',
+    source_type: 'manual',
+    start_date: '',
+    repeat_strategy_key: '',
+    source_id: '',
+    question_ids: []
+  }
+  fetchRepeatStrategies()
+  fetchQuestionSets()
+  fetchLibraryQuestions()
+}
+
+// 日历相关数据
+const currentDate = ref(new Date())
+const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+const calendarDays = ref([])
+const tasksMap = ref({})
+
+// 计算属性
+const currentYear = computed(() => currentDate.value.getFullYear())
+const currentMonth = computed(() => currentDate.value.getMonth())
+
+// 方法
+const prevMonth = () => {
+  currentDate.value = new Date(currentYear.value, currentMonth.value - 1, 1)
+  generateCalendar()
+  fetchCalendarTasks()
+}
+
+const nextMonth = () => {
+  currentDate.value = new Date(currentYear.value, currentMonth.value + 1, 1)
+  generateCalendar()
+  fetchCalendarTasks()
+}
+
+const isToday = (date) => {
+  const today = new Date()
+  return date === today.toISOString().split('T')[0]
+}
+
+const generateCalendar = () => {
+  const year = currentDate.value.getFullYear()
+  const month = currentDate.value.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
   
-  newPlanForm.value.startDate = selectedDayObj.toDate()
-  newPlanForm.value.endDate = selectedDayObj.add(7, 'day').toDate()
-  
-  // 关闭当前对话框，打开计划对话框
-  dayDetailDialogVisible.value = false
-  newPlanDialogVisible.value = true
-}
-
-// 查看选中日期的题目
-function viewProblemsForSelectedDay() {
-  console.log('查看日期题目:', selectedDay.value)
-  // 这里可以实现查看题目的逻辑
-}
-
-// 为选中日期添加笔记
-function addNoteForSelectedDay() {
-  // 关闭当前对话框，打开笔记对话框
-  dayDetailDialogVisible.value = false
-  noteDialogVisible.value = true
-}
-
-// 日历数据生成
-const calendarDays = computed(() => {
   const days = []
-  const firstDayOfMonth = currentDate.value.startOf('month')
-  const lastDayOfMonth = currentDate.value.endOf('month')
   
-  // 获取当月第一天是星期几（0是星期日）
-  const firstDayWeekday = firstDayOfMonth.day()
-  
-  // 添加上个月的日期
-  const prevMonthLastDay = firstDayOfMonth.subtract(1, 'day')
-  for (let i = firstDayWeekday - 1; i >= 0; i--) {
-    const day = prevMonthLastDay.subtract(i, 'day')
+  // 填充上个月的日期
+  const prevMonthDays = firstDay.getDay()
+  const prevMonth = new Date(year, month - 1, 0)
+  for (let i = prevMonthDays - 1; i >= 0; i--) {
+    const date = new Date(year, month - 1, prevMonth.getDate() - i)
     days.push({
-      date: day.date(),
+      date: date.toISOString().split('T')[0],
       currentMonth: false,
-      isToday: day.isSame(dayjs(), 'day'),
-      weather: null,
-      completedCount: 0,
-      tags: [],
-      studyTime: 0,
-      errorRate: 0
+      tasks: tasksMap.value[date.toISOString().split('T')[0]] || []
     })
   }
   
-  // 添加当月的日期
-  for (let i = 0; i < lastDayOfMonth.date(); i++) {
-    const day = firstDayOfMonth.add(i, 'day')
+  // 填充当前月的日期
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    const date = new Date(year, month, i)
     days.push({
-      date: i + 1,
+      date: date.toISOString().split('T')[0],
       currentMonth: true,
-      isToday: day.isSame(dayjs(), 'day'),
-      weather: null,
-      completedCount: 0,
-      tags: [],
-      studyTime: 0,
-      errorRate: 0
+      tasks: tasksMap.value[date.toISOString().split('T')[0]] || []
     })
   }
   
-  // 添加下个月的日期以填满网格（6行7列）
+  // 填充下个月的日期
   const remainingDays = 42 - days.length
   for (let i = 1; i <= remainingDays; i++) {
+    const date = new Date(year, month + 1, i)
     days.push({
-      date: i,
+      date: date.toISOString().split('T')[0],
       currentMonth: false,
-      isToday: false,
-      weather: null,
-      completedCount: 0,
-      tags: [],
-      studyTime: 0,
-      errorRate: 0
+      tasks: tasksMap.value[date.toISOString().split('T')[0]] || []
     })
   }
   
-  return days
-})
-
-// 随机生成天气图标
-function getRandomWeather() {
-  const weathers = ['sunny', 'cloudy', 'rainy', null]
-  return weathers[Math.floor(Math.random() * weathers.length)]
+  calendarDays.value = days
 }
 
-// 随机生成算法标签
-function getRandomTags() {
-  const allTags = ['DP', '贪心', '回溯', '排序', '二分', '树', '图', '哈希', '双指针', '滑窗']
-  const count = Math.floor(Math.random() * 3)
-  const tags = []
-  
-  for (let i = 0; i < count; i++) {
-    const randomIndex = Math.floor(Math.random() * allTags.length)
-    if (!tags.includes(allTags[randomIndex])) {
-      tags.push(allTags[randomIndex])
+const fetchCalendarTasks = async () => {
+  try {
+    const startDate = new Date(currentYear.value, currentMonth.value, 1)
+    const endDate = new Date(currentYear.value, currentMonth.value + 1, 0)
+    
+    const data = await getCalendarTasks({
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0]
+    })
+
+    // 将任务按日期分组
+    const newTasksMap = {}
+    if (Array.isArray(data)) {
+      data.forEach(group => {
+        newTasksMap[group.date] = group.tasks
+      })
     }
+    tasksMap.value = newTasksMap
+    generateCalendar()
+  } catch (error) {
+    console.error('获取任务失败:', error)
+    ElMessage.error('获取任务失败')
   }
+}
+
+const goToPractice = (task) => {
+  router.push(`/layout/practice/${task.question_id}`)
+}
+
+const initRadarChart = () => {
+  if (!radarChart.value) return
   
-  return tags
-}
-
-// 获取标签颜色
-function getTagColor(tag) {
-  const colorMap = {
-    'DP': '#409EFF',
-    '贪心': '#67C23A',
-    '回溯': '#E6A23C',
-    '排序': '#F56C6C',
-    '二分': '#909399',
-    '树': '#8E44AD',
-    '图': '#16A085',
-    '哈希': '#2980B9',
-    '双指针': '#C0392B',
-    '滑窗': '#D35400'
-  }
-  
-  return colorMap[tag] || '#409EFF'
-}
-
-// 月份导航
-function prevMonth() {
-  currentDate.value = currentDate.value.subtract(1, 'month')
-}
-
-function nextMonth() {
-  currentDate.value = currentDate.value.add(1, 'month')
-}
-
-// 今日练习记录
-const todayRecords = ref([
-  {
-    time: '09:00',
-    title: '新题 - 二叉树的最大深度',
-    detail: '独立完成 / 完成度 3/3'
-  },
-  {
-    time: '14:30',
-    title: '复习 - 二叉树遍历',
-    detail: '总结要点 2/2 / 代码复现 4/1'
-  },
-  {
-    time: '21:30',
-    title: '当日检验',
-    detail: '自我测验 - 通过'
-  }
-])
-
-// 复习周期数据
-const reviewCycles = ref([
-  {
-    name: '二叉树遍历',
-    current: 3,
-    total: 5,
-    status: '已复习 3/5'
-  },
-  {
-    name: '动态规划基础',
-    current: 1,
-    total: 7,
-    status: '进行中 2/5'
-  }
-])
-
-// 新建计划对话框
-const newPlanDialogVisible = ref(false)
-const newPlanForm = ref({
-  name: '',
-  startDate: '',
-  endDate: '',
-  type: 'template',
-  dailyCount: 5
-})
-
-function showNewPlanDialog() {
-  newPlanDialogVisible.value = true
-}
-
-// 创建新计划
-function createNewPlan() {
-  // 这里添加创建计划的逻辑
-  console.log('创建新计划:', newPlanForm.value)
-  
-  // 如果是模板计划，显示计划表
-  if (newPlanForm.value.type === 'template') {
-    showPlanTable.value = true
-  }
-  
-  // 模拟API调用
-  setTimeout(() => {
-    newPlanDialogVisible.value = false
-    // 重置表单
-    newPlanForm.value = {
-      name: '',
-      startDate: '',
-      endDate: '',
-      type: 'template',
-      dailyCount: 5
-    }
-  }, 1000)
-}
-
-// 速记功能
-const noteDialogVisible = ref(false)
-const noteContent = ref('')
-
-function showNoteDialog() {
-  noteDialogVisible.value = true
-}
-
-function saveNote() {
-  // 这里添加保存笔记的逻辑
-  console.log('保存笔记:', noteContent.value)
-  // 模拟API调用
-  setTimeout(() => {
-    noteDialogVisible.value = false
-    // 重置内容
-    noteContent.value = ''
-  }, 1000)
-}
-
-// 初始化雷达图
-onMounted(() => {
-  initRadarChart()
-})
-
-function initRadarChart() {
-  const chartDom = document.getElementById('radar-chart')
-  if (!chartDom) return
-  
-  const myChart = echarts.init(chartDom)
-  
+  const chart = echarts.init(radarChart.value)
   const option = {
     radar: {
       indicator: [
-        { name: '数组', max: 100 },
-        { name: '链表', max: 100 },
-        { name: '树', max: 100 },
-        { name: '图', max: 100 },
-        { name: '动态规划', max: 100 },
-        { name: '贪心', max: 100 }
+        { name: '算法', max: 100 },
+        { name: '数据结构', max: 100 },
+        { name: '编程能力', max: 100 },
+        { name: '解题思路', max: 100 },
+        { name: '代码质量', max: 100 },
+        { name: '效率优化', max: 100 }
       ]
     },
     series: [{
       type: 'radar',
       data: [{
-        value: [85, 65, 90, 50, 75, 80],
-        name: '掌握度',
-        areaStyle: {
-          color: 'rgba(64, 158, 255, 0.6)'
-        },
-        lineStyle: {
-          color: '#409EFF'
-        },
-        itemStyle: {
-          color: '#409EFF'
-        }
+        value: [80, 70, 85, 75, 90, 65],
+        name: '能力评估'
       }]
     }]
   }
-  
-  myChart.setOption(option)
+  chart.setOption(option)
+}
+
+onMounted(() => {
+  generateCalendar()
+  fetchCalendarTasks()
+  initRadarChart()
+})
+
+const openDayDetail = async (day) => {
+  selectedDate.value = day.date
+  try {
+    const res = await getDayPlan({ date: day.date })
+    selectedDateTasks.value = res.tasks || []
+    showDayDetailDialog.value = true
+  } catch (error) {
+    console.error('获取当天任务详情失败:', error)
+    ElMessage.error('获取当天任务详情失败')
+    selectedDateTasks.value = [] // 清空以防显示旧数据
+  }
 }
 </script>
 
 <style scoped>
 .plan-container {
-  --primary-color: #409EFF;
-  --danger-color: #F56C6C;
-  --text-primary: #303133;
-  --text-regular: #606266;
-  --text-secondary: #909399;
-  --border-lighter: #EBEEF5;
-  
-  display: flex;
-  height: calc(100vh - 60px);
   padding: 20px;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-gap: 20px;
 }
 
-.plan-table-section {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  padding: 20px;
-}
-
-.plan-table-header {
+.header-actions {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.plan-table-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--text-primary);
+.month-navigation {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-/* 日历部分样式 */
-.calendar-section {
-  flex: 1;
-  background-color: #fff;
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.calendar-container {
+  grid-column: 1;
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.calendar-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-lighter);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.calendar-title {
-  display: flex;
-  align-items: center;
-}
-
-.calendar-title h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  margin-right: 16px;
-}
-
-.calendar-nav {
-  display: flex;
-  gap: 8px;
-}
-
-.calendar-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.calendar-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
-
-.calendar-weekdays {
+.weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background-color: #f5f7fa;
-  border-bottom: 1px solid var(--border-lighter);
-}
-
-.weekday {
-  padding: 12px 0;
   text-align: center;
-  font-weight: 500;
-  color: var(--text-regular);
-  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
 .calendar-grid {
-  flex: 1;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  overflow: auto;
+  gap: 8px;
+  /* height: 600px; */ /* Removed fixed height to allow content to define height */
 }
 
 .calendar-day {
-  border-right: 1px solid var(--border-lighter);
-  border-bottom: 1px solid var(--border-lighter);
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
   padding: 8px;
+  min-height: 80px; /* Adjusted min-height for a more compact look */
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
   display: flex;
   flex-direction: column;
-  min-height: 100px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  justify-content: space-between; /* Align date number to top and indicator to bottom */
+  position: relative; /* For positioning task indicators */
 }
 
 .calendar-day:hover {
-  background-color: #f5f7fa;
-}
-
-.calendar-day.selected {
-  background-color: rgba(64, 158, 255, 0.1);
-  box-shadow: inset 0 0 0 2px var(--primary-color);
-}
-
-.calendar-day.current-month {
-  background-color: #fff;
-}
-
-.calendar-day:not(.current-month) {
-  background-color: #f9f9f9;
-  color: var(--text-secondary);
-}
-
-.calendar-day.today {
-  background-color: rgba(64, 158, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .day-header {
@@ -728,279 +543,116 @@ function initRadarChart() {
 }
 
 .day-number {
-  font-weight: 500;
-  font-size: 16px;
-}
-
-.calendar-day.today .day-number {
-  background-color: var(--primary-color);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.weather-icon {
-  width: 20px;
-  height: 20px;
-  background-size: contain;
-  background-repeat: no-repeat;
-}
-
-.weather-icon.sunny {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23F39C12"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>');
-}
-
-.weather-icon.cloudy {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233498DB"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>');
-}
-
-.weather-icon.rainy {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233498DB"><path d="M16 13v8M8 13v8M12 15v8M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>');
+  font-weight: bold;
 }
 
 .day-content {
-  flex: 1;
+  /* height: calc(100% - 30px); */ /* Adjusted to allow flex to manage height */
+  /* overflow-y: auto; */ /* Not needed if content is summarized */
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: flex-end; /* Align summary to bottom, above indicator */
+  flex-grow: 1; /* Allow content to take available space */
 }
 
-.completed-badge {
-  background-color: var(--primary-color);
-  color: white;
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-size: 12px;
-  align-self: flex-start;
+.task-indicator-container {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-.tag-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
+.task-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #409eff;
+  border-radius: 50%;
+  margin-right: 4px;
 }
 
-.algorithm-tag {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: white;
-  white-space: nowrap;
+.task-count {
+  font-size: 0.75em; /* Slightly increased font size for task count */
+  color: #409eff;
 }
 
-.day-footer {
-  margin-top: auto;
-}
-
-.study-progress {
-  height: 4px;
-  background-color: #eee;
-  border-radius: 2px;
+.task-list-summary {
+  font-size: 1em; /* Increased font size */
+  line-height: 1.3; /* Adjusted line height */
+  text-align: left;
   overflow: hidden;
-  margin-top: 4px;
+  max-height: 2.6em; /* Adjusted max height for new font size */
+  margin-bottom: 2px; /* Space between summary and indicator if both present */
 }
 
-.progress-bar {
-  height: 100%;
-  background-color: var(--primary-color);
+.task-summary-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.error-warning {
-  color: var(--danger-color);
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 4px;
+.no-tasks-placeholder {
+  min-height: 1.2em; /* Placeholder to maintain alignment with task summary */
 }
 
-/* 工具面板样式 */
-.tools-panel {
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* Removed .task-list, .task-item, .task-info, .task-title, .no-tasks as they are replaced */
+
+.current-month {
+  background: #fff;
 }
 
-.card {
-  background-color: #fff;
+.today {
+  background: #ecf5ff;
+  border-color: #409eff;
+}
+
+/* .has-tasks removed, using indicator now */
+
+/* 右侧面板样式 */
+.knowledge-radar,
+.today-practice,
+.review-cycle {
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.card h3 {
-  margin-top: 0;
-  margin-bottom: 16px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* 雷达图样式 */
 .radar-chart {
-  height: 200px;
+  height: 300px;
 }
 
-/* 今日记录样式 */
-.record-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.practice-list {
+  margin-top: 10px;
 }
 
-.record-item {
-  display: flex;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-lighter);
+.practice-item {
+  padding: 10px;
+  border-radius: 4px;
+  background: #f5f7fa;
+  margin-bottom: 10px;
 }
 
-.record-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.practice-title {
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
-.record-time {
-  font-weight: 500;
-  color: var(--text-regular);
-  min-width: 50px;
-}
-
-.record-content {
-  flex: 1;
-}
-
-.record-title {
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-.record-detail {
+.practice-status {
   font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* 复习周期样式 */
-.cycle-items {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  color: #909399;
 }
 
 .cycle-item {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.cycle-info {
-  display: flex;
-  justify-content: space-between;
-}
-
-.cycle-name {
-  font-weight: 500;
-}
-
-.cycle-progress {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.progress {
-  height: 6px;
-  background-color: #eee;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.cycle-status {
-  font-size: 12px;
-  color: var(--text-regular);
-}
-
-/* 日期详情对话框样式 */
-.day-detail-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.day-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  background-color: #f5f7fa;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.summary-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.summary-label {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.summary-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.error-text {
-  color: var(--danger-color);
-}
-
-.day-tags {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.day-tags h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.day-tag {
-  margin-right: 0;
-}
-
-.day-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.day-actions h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
+.progress-text {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

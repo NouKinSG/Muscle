@@ -67,6 +67,8 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { register } from '@/api/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const registerFormRef = ref(null)
@@ -112,14 +114,34 @@ const registerRules = {
 const agreement = ref(false)
 
 // 注册处理
-const handleRegister = () => {
-  registerFormRef.value.validate(valid => {
+const handleRegister = async () => {
+  registerFormRef.value.validate(async (valid) => {
     if (valid) {
-      // 模拟注册请求
-      setTimeout(() => {
-        // 注册成功后跳转到登录页
-        router.push('/login')
-      }, 1000)
+      try {
+        const response = await register({
+          username: registerForm.username,
+          email: registerForm.email,
+          password: registerForm.password
+        })
+
+        // 响应拦截器已处理code不为0的情况，能到这里说明已成功，response即为data部分
+        // console.log(response) // response 现在是 { user: {...}, token: '...' }
+        if (response) { // 增加判断，确保response有值
+          ElMessage.success('注册成功！即将跳转到登录页面。')
+          // 注册成功后跳转到登录页
+          router.push('/login')
+          // 如果需要使用token或用户信息，可以从 response 中获取，例如：
+          // const token = response.token;
+          // const userInfo = response.user;
+        } else {
+          // 理论上不应该进入此分支，因为拦截器会处理错误或返回data
+          console.error('注册成功响应为空:', response);
+          ElMessage.error('注册响应异常，请稍后再试。');
+        }
+      } catch (error) {
+        console.error('注册请求失败:', error)
+        ElMessage.error('注册请求失败，请检查网络或联系管理员。')
+      }
     }
   })
 }

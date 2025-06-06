@@ -1,0 +1,501 @@
+{
+	"info": {
+		"_postman_id": "d0c70911-0922-4be0-8a7f-3fed5072cc32",
+		"name": "九凤",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "36351553",
+		"_collection_link": "https://crimson-capsule-874256-7288.postman.co/workspace/%25E4%25B9%259D%25E5%2587%25A4-Workspace~e00a8eae-967e-429e-8ab2-fb2db6aa67bf/collection/36986125-d0c70911-0922-4be0-8a7f-3fed5072cc32?action=share&source=collection_link&creator=36351553"
+	},
+	"item": [
+		{
+			"name": "算法训练器",
+			"item": [
+				{
+					"name": "用户模块",
+					"item": [
+						{
+							"name": "登录",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/plain"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"tengzj@example.com\",\n  \"password\": \"12345678\"\n}",
+									"options": {
+										"raw": {
+											"language": "text"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/user/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"user",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "注册",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"ciusyan\",\n  \"email\": \"ciusyan@example.com\",\n  \"password\": \"123456\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8082/api/user/register",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"api",
+										"user",
+										"register"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "计划模块",
+					"item": [
+						{
+							"name": "导入测试计划",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"plan_name\": \"算法入门计划\",\n    \"repeat_key\": \"default_strategy\",\n    \"source_type\":\"topic_set\",\n    \"question_ids\": [\n        4,\n        5,\n        6\n    ],\n    \"start_date\": \"2025-06-07\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/import",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"import"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "日历任务获取",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/calendar?start_date=2025-06-06&end_date=2025-06-12",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"calendar"
+									],
+									"query": [
+										{
+											"key": "start_date",
+											"value": "2025-06-06"
+										},
+										{
+											"key": "end_date",
+											"value": "2025-06-12"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取每日计划",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/day?date=2025-06-08",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"day"
+									],
+									"query": [
+										{
+											"key": "date",
+											"value": "2025-06-08"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取系统内置重复策略",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/repeat-strategies",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"repeat-strategies"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取题目列表",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/library/list",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"library",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取题单列表",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/question-set/list",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"question-set",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取题单详情（含题目列表）",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/question-set/3",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"question-set",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取题目详情",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDkyMTA5MzAsImlhdCI6MTc0OTEyNDUzMH0.PBk2gvHMU-pSSWbvp8IZYZ1xTZI_7ibu8rqkNcNR-TE"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/plan/question/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"plan",
+										"question",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "练习模块",
+					"item": [
+						{
+							"name": "获取当日任务列表",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/practice/daily-tasks?date=2025-06-05",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"practice",
+										"daily-tasks"
+									],
+									"query": [
+										{
+											"key": "date",
+											"value": "2025-06-05"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取题目详细",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/practice/questions/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"practice",
+										"questions",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "提交题目",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/practice/submit",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"practice",
+										"submit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取上一次提交正确的代码",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/practice/previous-accepted/last?question_id=1&userId=2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"practice",
+										"previous-accepted",
+										"last"
+									],
+									"query": [
+										{
+											"key": "question_id",
+											"value": "1"
+										},
+										{
+											"key": "userId",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取历史通过的提交记录列表",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8082/algo/v1/practice/previous-accepted/list?question_id=1&limit=5",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8082",
+									"path": [
+										"algo",
+										"v1",
+										"practice",
+										"previous-accepted",
+										"list"
+									],
+									"query": [
+										{
+											"key": "question_id",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "5"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

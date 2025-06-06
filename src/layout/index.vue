@@ -8,10 +8,20 @@
           <span class="logo-text">Muscle</span>
         </div>
         <nav class="main-nav">
-          <router-link to="/layout/plan" class="nav-item">日历</router-link>
-          <router-link to="/layout/practice" class="nav-item">练习</router-link>
-          <router-link to="/layout/statistics" class="nav-item">数据分析</router-link>
-          <router-link to="/layout/profile" class="nav-item">做题记录</router-link>
+          <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+            <el-menu-item index="/layout/plan">
+              日历
+            </el-menu-item>
+            <el-menu-item index="/layout/practice">
+              练习
+            </el-menu-item>
+            <el-menu-item index="/layout/statistics">
+              数据分析
+            </el-menu-item>
+            <el-menu-item index="/layout/profile">
+              个人中心
+            </el-menu-item>
+          </el-menu>
         </nav>
       </div>
       <div class="header-right">
@@ -46,7 +56,65 @@
 </template>
 
 <script setup>
-// 布局组件，包含顶部导航栏和主内容区域
+import { ref, computed } from 'vue';
+import { RouterView, useRouter, useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import { useUserStore } from '@/stores/user';
+import { getDailyTasks } from '@/api/practice'; // 导入 getDailyTasks
+
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
+
+const activeIndex = computed(() => {
+  // 根据当前路由确定激活的导航项
+  if (route.path.startsWith('/layout/plan')) return '/layout/plan';
+  if (route.path.startsWith('/layout/practice')) return '/layout/practice';
+  if (route.path.startsWith('/layout/analysis')) return '/layout/analysis';
+  if (route.path.startsWith('/layout/records')) return '/layout/records';
+  return '/layout/plan'; // 默认
+});
+
+const handleSelect = async (key) => {
+  if (key === '/layout/practice') {
+    try {
+      const dailyTasksData = await getDailyTasks();
+      // 后端返回的数据结构是 { code: 0, message: "成功", data: { date: "", tasks: [...] } }
+      // request.js 中处理后，我们直接拿到 res.data，即 { date: "", tasks: [...] }
+      if (dailyTasksData && dailyTasksData.tasks && dailyTasksData.tasks.length > 0) {
+        const firstTask = dailyTasksData.tasks[0];
+        router.push({ name: 'Practice', params: { questionId: firstTask.question_id } });
+      } else {
+        ElMessage.info('今日暂无练习任务');
+        // 可选：跳转到题目列表页或日历页
+        // router.push('/layout/calendar'); 
+      }
+    } catch (error) {
+      ElMessage.error('获取每日任务失败，请稍后再试');
+      console.error('Failed to fetch daily tasks:', error);
+    }
+  } else {
+    router.push(key);
+  }
+};
+
+const logout = () => {
+  userStore.logout();
+  ElMessage.success('已退出登录');
+  router.push('/login');
+};
+
+// 示例：获取用户信息，如果需要的话
+// onMounted(() => {
+//   if (!userStore.userInfo) {
+//     userStore.fetchUserInfo().catch(err => {
+//       ElMessage.error('获取用户信息失败: ' + err.message);
+//     });
+//   }
+// });
+
+const userName = computed(() => userStore.userInfo?.username || userStore.token?.substring(0, 6) || '用户');
+
 </script>
 
 <style lang="scss" scoped>

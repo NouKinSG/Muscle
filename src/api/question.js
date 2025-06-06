@@ -7,7 +7,7 @@ import request from '@/utils/request'
  */
 export function getQuestionDetail(questionId) {
   return request({
-    url: `/api/question/${questionId}`,
+    url: `/algo/v1/plan/question/${questionId}`,
     method: 'get'
   })
 }
@@ -19,7 +19,7 @@ export function getQuestionDetail(questionId) {
  */
 export function getLibraryList(params) {
   return request({
-    url: '/api/library/list',
+    url: '/algo/v1/plan/library-questions',
     method: 'get',
     params
   })
@@ -32,7 +32,7 @@ export function getLibraryList(params) {
  */
 export function getQuestionSetList(params) {
   return request({
-    url: '/api/question-set/list',
+    url: '/algo/v1/plan/question-set-list',
     method: 'get',
     params
   })
@@ -55,7 +55,7 @@ export function getQuestionSetList(params) {
  */
 export function getQuestionSetDetail(setId) {
   return request({
-    url: `/api/question-set/${setId}`,
+    url: `/algo/v1/plan/question-set/${setId}`,
     method: 'get'
   })
 }

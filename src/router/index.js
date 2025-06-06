@@ -31,7 +31,7 @@ const routes = [
         meta: { title: '计划' }
       },
       {
-        path: 'practice',
+        path: 'practice/:questionId',
         name: 'Practice',
         component: () => import('@/views/practice/index.vue'),
         meta: { title: '练习' }

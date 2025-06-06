@@ -4,8 +4,9 @@ import logger from './logger'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:8080', // 后端服务地址
-  timeout: 10000 // 请求超时时间
+  baseURL: '/', // 后端服务地址, 修改为相对路径以配合代理
+  timeout: 10000, // 请求超时时间
+  withCredentials: true, // 确保携带凭证
 })
 
 // 请求拦截器

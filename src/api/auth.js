@@ -7,7 +7,7 @@ import request from '@/utils/request'
  */
 export function login(data) {
   return request({
-    url: '/api/user/login',
+    url: '/algo/v1/user/login',
     method: 'post',
     data
   })
@@ -21,7 +21,7 @@ export function login(data) {
 
 export function register(data) {
   return request({
-    url: '/api/user/register',
+    url: '/algo/v1/user/register',
     method: 'post',
     data
   })
@@ -34,7 +34,7 @@ export function register(data) {
  */
 export function forgotPassword(data) {
   return request({
-    url: '/api/v1/auth/forgot-password',
+    url: '/algo/v1/user/forgot-password',
     method: 'post',
     data
   })
@@ -47,7 +47,7 @@ export function forgotPassword(data) {
  */
 export function resetPassword(data) {
   return request({
-    url: '/api/v1/auth/reset-password',
+    url: '/algo/v1/user/reset-password',
     method: 'post',
     data
   })
@@ -59,7 +59,7 @@ export function resetPassword(data) {
  */
 export function getUserProfile() {
   return request({
-    url: '/api/v1/user/profile',
+    url: '/algo/v1/user/profile',
     method: 'get'
   })
 }
